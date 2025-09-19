@@ -21,9 +21,27 @@ source activate pykt
 
 
 ```
-pip install -U pykt-toolkit -i  https://pypi.python.org/simple 
+pip install -U pykt-toolkit -i  https://pypi.python.org/simple
 
 ```
+
+### Pyramid-attention (PAM) variants
+
+We provide pyramid-attention counterparts of the SAKT, SAINT and SAINT++ models. They can be launched through the following entrypoints in `examples/`:
+
+- `wandb_pam_sakt_train.py`, which defaults to `--dataset_name assist2015`, `--model_name pam_sakt`, `--emb_type qid`, `--save_dir saved_model`, `--seed 42`, `--fold 0`, `--dropout 0.2`, `--emb_size 256`, `--learning_rate 1e-3`, `--num_attn_heads 8`, `--num_en 1`, `--num_pyramid_levels 2`, `--use_wandb 1` and `--add_uuid 1`.
+- `wandb_pam_saint_train.py`, which shares the same defaults while setting `--model_name pam_saint` and `--n_blocks 2`.
+- `wandb_pam_saint_plus_plus_train.py`, which also shares the common defaults while setting `--model_name pam_saint++` and `--n_blocks 4`.
+
+Each script exposes the same CLI flags as their SAKT/SAINT/SAINT++ counterparts so you can override datasets, dropout, attention heads or the number of pyramid levels as needed. For example:
+
+```
+CUDA_VISIBLE_DEVICES=0 python examples/wandb_pam_sakt_train.py --dataset_name=assist2015 --use_wandb=0 --add_uuid=0 > pam_sakt_train.txt &
+CUDA_VISIBLE_DEVICES=0 python examples/wandb_pam_saint_train.py --dataset_name=assist2015 --use_wandb=0 --add_uuid=0 > pam_saint_train.txt &
+CUDA_VISIBLE_DEVICES=0 python examples/wandb_pam_saint_plus_plus_train.py --dataset_name=assist2015 --use_wandb=0 --add_uuid=0 > pam_saint_pp_train.txt &
+```
+
+These commands mirror the standard SAKT/SAINT/SAINT++ runners, making it easy to experiment with the PAM architectures directly from the command line.
 
 ## Hyper parameter tunning results
 The hyper parameter tunning results of our experiments about all the DLKT models on various datasets can be found at https://drive.google.com/drive/folders/1MWYXj73Ke3zC6bm3enu1gxQQKAHb37hz?usp=drive_link.
