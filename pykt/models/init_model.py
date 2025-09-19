@@ -8,6 +8,9 @@ from .dkvmn import DKVMN
 from .deep_irt import DeepIRT
 from .sakt import SAKT
 from .saint import SAINT
+from .pam_sakt import PAM_SAKT
+from .pam_saint import PAM_SAINT
+from .pam_saint_plus_plus import PAM_SAINT_PLUS_PLUS
 from .kqn import KQN
 from .atkt import ATKT
 from .dkt_forget import DKTForget
@@ -51,8 +54,14 @@ def init_model(model_name, model_config, data_config, emb_type):
         model = DeepIRT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "sakt":
         model = SAKT(data_config["num_c"],  **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "pam_sakt":
+        model = PAM_SAKT(data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "saint":
         model = SAINT(data_config["num_q"], data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "pam_saint":
+        model = PAM_SAINT(data_config["num_q"], data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
+    elif model_name == "pam_saint++":
+        model = PAM_SAINT_PLUS_PLUS(data_config["num_q"], data_config["num_c"], **model_config, emb_type=emb_type, emb_path=data_config["emb_path"]).to(device)
     elif model_name == "dkt_forget":
         model = DKTForget(data_config["num_c"], data_config["num_rgap"], data_config["num_sgap"], data_config["num_pcount"], **model_config).to(device)
     elif model_name == "akt":

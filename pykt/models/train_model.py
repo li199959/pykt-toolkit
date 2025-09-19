@@ -13,6 +13,9 @@ import pandas as pd
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+SAKT_FAMILY = {"sakt", "pam_sakt"}
+SAINT_FAMILY = {"saint", "saint++", "pam_saint", "pam_saint++"}
+
 def cal_loss(model, ys, r, rshft, sm, preloss=[]):
     model_name = model.model_name
 
@@ -47,7 +50,7 @@ def cal_loss(model, ys, r, rshft, sm, preloss=[]):
             loss1 = loss1 + model.cl_weight * loss2
         loss =loss1
 
-    elif model_name in ["rkt","dimkt","dkt", "dkt_forget", "dkvmn","deep_irt", "kqn", "sakt", "saint", "atkt", "atktfix", "gkt", "skvmn", "hawkes"]:
+    elif model_name in ["rkt","dimkt","dkt", "dkt_forget", "dkvmn","deep_irt", "kqn", "sakt", "pam_sakt", "saint", "saint++", "pam_saint", "pam_saint++", "atkt", "atktfix", "gkt", "skvmn", "hawkes"]:
 
         y = torch.masked_select(ys[0], sm)
         t = torch.masked_select(rshft, sm)
@@ -211,10 +214,10 @@ def model_forward(model, data, rel=None):
     elif model_name in ["dkvmn","deep_irt", "skvmn"]:
         y = model(cc.long(), cr.long())
         ys.append(y[:,1:])
-    elif model_name in ["kqn", "sakt"]:
+    elif model_name in ["kqn"] or model_name in SAKT_FAMILY:
         y = model(c.long(), r.long(), cshft.long())
         ys.append(y)
-    elif model_name in ["saint"]:
+    elif model_name in SAINT_FAMILY:
         y = model(cq.long(), cc.long(), r.long())
         ys.append(y[:, 1:])
     elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lefokt_akt", "fluckt"]:               
