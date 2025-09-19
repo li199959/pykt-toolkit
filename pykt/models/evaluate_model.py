@@ -8,6 +8,9 @@ from ..datasets.lpkt_utils import generate_time2idx
 import pandas as pd
 import csv
 
+SAKT_FAMILY = {"sakt", "pam_sakt"}
+SAINT_FAMILY = {"saint", "saint++", "pam_saint", "pam_saint++"}
+
 device = "cpu" if not torch.cuda.is_available() else "cuda"
 
 def save_cur_predict_result(dres, q, r, d, t, m, sm, p):
@@ -109,9 +112,9 @@ def evaluate(model, test_loader, model_name, rel=None, save_path=""):
             elif model_name in ["dkvmn","deep_irt", "skvmn","deep_irt"]:
                 y = model(cc.long(), cr.long())
                 y = y[:,1:]
-            elif model_name in ["kqn", "sakt"]:
+            elif model_name in ["kqn"] or model_name in SAKT_FAMILY:
                 y = model(c.long(), r.long(), cshft.long())
-            elif model_name == "saint":
+            elif model_name in SAINT_FAMILY:
                 y = model(cq.long(), cc.long(), r.long())
                 y = y[:, 1:]
             elif model_name in ["akt","extrakt","folibikt", "robustkt", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lefokt_akt", "fluckt"]:                                
@@ -187,10 +190,10 @@ def early_fusion(curhs, model, model_name):
         output = model.out(curhs[0]).squeeze(-1)
         m = nn.Sigmoid()
         p = m(output)
-    elif model_name == "saint":
+    elif model_name in SAINT_FAMILY:
         p = model.out(model.dropout(curhs[0]))
         p = torch.sigmoid(p).squeeze(-1)
-    elif model_name == "sakt":
+    elif model_name in SAKT_FAMILY:
         p = torch.sigmoid(model.pred(model.dropout_layer(curhs[0]))).squeeze(-1)
     elif model_name == "kqn":
         logits = torch.sum(curhs[0] * curhs[1], dim=1) # (batch_size, max_seq_len)
@@ -229,7 +232,7 @@ def effective_fusion(df, model, model_name, fusion_type):
 
     curhs, curr = [[], []], []
     dcur = {"late_trues": [], "qidxs": [], "questions": [], "concepts": [], "row": [], "concept_preds": []}
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "akt","extrakt", "folibikt", "robustkt", "dtransformer", "simplekt","stablekt","cskt","fluckt", "ukt", "hcgkt", "datakt", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt"]
+    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "akt","extrakt", "folibikt", "robustkt", "dtransformer", "simplekt","stablekt","cskt","fluckt", "ukt", "hcgkt", "datakt", "sparsekt","lefokt_akt",  "saint", "saint++", "pam_saint", "pam_saint++", "sakt", "pam_sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt"]
     for ui in df:
         # 一题一题处理
         curdf = ui[1]
@@ -277,7 +280,7 @@ def group_fusion(dmerge, model, model_name, fusion_type, fout):
     if cq.shape[1] == 0:
         cq = cc
 
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","robustkt", "extrakt", "folibikt","simplekt","stablekt","cskt", "fluckt", "ukt",  "hcgkt", "datakt", "sparsekt","lefokt_akt",  "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt"]
+    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","robustkt", "extrakt", "folibikt","simplekt","stablekt","cskt", "fluckt", "ukt",  "hcgkt", "datakt", "sparsekt","lefokt_akt",  "saint", "saint++", "pam_saint", "pam_saint++", "sakt", "pam_sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt"]
     
     alldfs, drest = [], dict() # not predict infos!
     # print(f"real bz in group fusion: {rs.shape[0]}")
@@ -374,7 +377,7 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
     # dkvmn / akt / saint: give cur -> predict cur
     # sakt: give past+cur -> predict cur
     # kqn: give past+cur -> predict cur
-    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","extrakt","folibikt", "robustkt", "simplekt","cskt","fluckt", "stablekt", "ukt", "hcgkt", "datakt", "sparsekt", "lefokt_akt", "saint", "sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt"]
+    hasearly = ["dkvmn","deep_irt", "skvmn", "kqn", "dtransformer", "akt","extrakt","folibikt", "robustkt", "simplekt","cskt","fluckt", "stablekt", "ukt", "hcgkt", "datakt", "sparsekt", "lefokt_akt", "saint", "saint++", "pam_saint", "pam_saint++", "sakt", "pam_sakt", "hawkes", "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx", "lpkt"]
     if save_path != "":
         fout = open(save_path, "w", encoding="utf8")
         if model_name in hasearly:
@@ -441,10 +444,10 @@ def evaluate_question(model, test_loader, model_name, fusion_type=["early_fusion
                 sg = nn.Sigmoid()
                 y = sg(output)
                 y = y[:,1:]
-            elif model_name == "saint":
+            elif model_name in SAINT_FAMILY:
                 y, h = model(cq.long(), cc.long(), r.long(), True)
                 y = y[:,1:]
-            elif model_name == "sakt":
+            elif model_name in SAKT_FAMILY:
                 y, h = model(c.long(), r.long(), cshft.long(), True)
                 start_hemb = torch.tensor([-1] * (h.shape[0] * h.shape[2])).reshape(h.shape[0], 1, h.shape[2]).to(device)
                 # print(start_hemb.shape, h.shape)
@@ -895,12 +898,12 @@ def predict_each_group(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid, 
             # y = model(cin.long(), rin.long(), din, dcur)
             y = model(cin.long(), rin.long(), dgaps)
             pred = y[0][-1][cout.item()]
-        elif model_name in ["kqn", "sakt"]:
+        elif model_name in ["kqn"] or model_name in SAKT_FAMILY:
             curc = torch.tensor([[cout.item()]]).to(device)
             cshft = torch.cat((cin[:,1:],curc), axis=1)
             y = model(cin.long(), rin.long(), cshft.long())
             pred = y[0][-1]
-        elif model_name == "saint":
+        elif model_name in SAINT_FAMILY:
             #### 输入有question！
             if qout != None:
                 curq = torch.tensor([[qout.item()]]).to(device)
@@ -1313,9 +1316,9 @@ def predict_each_group2(dtotal, dcur, dforget, curdforget, is_repeat, qidx, uid,
         elif model_name in ["dkvmn","deep_irt", "skvmn"]:
             y = model(ccc.long(), ccr.long())
             y = y[:,1:]
-        elif model_name in ["kqn", "sakt"]:
+        elif model_name in ["kqn"] or model_name in SAKT_FAMILY:
             y = model(curc.long(), curr.long(), curcshft.long())
-        elif model_name == "saint":
+        elif model_name in SAINT_FAMILY:
             y = model(ccq.long(), ccc.long(), curr.long())
             y = y[:, 1:]
         elif model_name in ["akt","extrakt","folibikt", "robustkt", "cakt","fluckt","lefokt_akt",  "akt_vector", "akt_norasch", "akt_mono", "akt_attn", "aktattn_pos", "aktmono_pos", "akt_raschx", "akt_raschy", "aktvec_raschx"]:                                
